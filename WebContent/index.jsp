@@ -7,6 +7,13 @@
 <title>Insert title here</title>
 </head>
 <body>
-test
+<div>
+<form action="./upload.jsp" method="post" enctype="multipart/form-data"><div>
+<lable for="file">Choose a file to be uploaded.</lable>
+<input type="file" id="file" name="file"/>
+</div>
+<div><input type="submit" name="upload" value="upload"/></div>
+</form>
+</div>
 </body>
 </html>
