@@ -1,11 +1,9 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-<%@ page import = "org.apache.commons.fileupload.*" %>
-<%@ page import = "org.apache.commons.fileupload.disk.*" %>
-<%@ page import = "org.apache.commons.fileupload.servlet.*" %>
-<%@ page import = "org.apache.commons.io.output.*" %>
+<%@ page import = "javax.servlet.http.*" %>
 <%@ page import = "java.util.*" %>
 <%@ page import = "java.io.*" %>
+<%@ page import = "java.nio.file.*" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -15,34 +13,28 @@
 <body>
 <%
 String savedFileFolder = "C:\\Temp\\uploaded";
-DiskFileItemFactory factory = new DiskFileItemFactory();
-factory.setRepository(new File("C:\\Temp\\uploaded"));
-ServletFileUpload upload = new ServletFileUpload(factory);
-String contentType = request.getContentType();
-try {
-	List fileItems = upload.parseRequest(request);
-	Iterator i = fileItems.iterator();
-	while (i.hasNext()) {
-		FileItem fi = (FileItem) i.next();
-		if (!fi.isFormField()) {
-			String fieldName = fi.getFieldName();
-			String fileName = fi.getName();
-			boolean isInMemory = fi.isInMemory();
-			long sizeInBytes = fi.getSize();
-			String savedFilePath = "";
-			if (fileName.lastIndexOf("\\") >= 0) {
-				savedFilePath = savedFileFolder + "\\" + fileName.substring(fileName.lastIndexOf("\\"));
-			} else if (fileName.lastIndexOf("/") >= 0) {
-				savedFilePath = savedFileFolder + "\\" + fileName.substring(fileName.lastIndexOf("/"));
-			} else {
-				savedFilePath = savedFileFolder + "\\" + fileName;
-			}
-			fi.write(new File(savedFilePath));
+Part filePart = request.getPart("file");
+String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
 %>
-<div><%= fileName %> was uploaded and saved as <%= savedFilePath %>.</div>
+<div><%= fileName %> was uploaded.</div>
 <%
+InputStream fileContent = filePart.getInputStream();
+String savedFileName = savedFileFolder + "\\" + fileName;
+try {
+	byte[] buf = new byte[1024];
+	FileOutputStream fos = new FileOutputStream(savedFileName);
+	while (true) {
+		int n = fileContent.read(buf);
+		if (n < 0) {
+			break; // EOF
 		}
+		fos.write(buf, 0, n);
 	}
+	fos.close();
+	fileContent.close();
+%>
+	<div>The file was saved as <%= savedFileName %></div>
+<%
 } catch (Exception e) {
 %>
 <div>ERROR: <%= e.getMessage() %></div>
